@@ -107,4 +107,3 @@ static void free_query_node(queryNode* queryNodeHead)
   free(queryNodeHandle);
   queryNodeHead->next=NULL;
 }
-
