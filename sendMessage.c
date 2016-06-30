@@ -14,14 +14,16 @@ struct queryNode{
   queryNode* next;
 };
 
-static unsigned int get_thing_id(char* thingID);
-static unsigned int get_query_count(void);
-static unsigned int allocate_query_nodes(queryNode* queryNodeHead);
+static int get_thing_id(char* thingID);
+static int get_query_count(void);
+static int allocate_query_nodes(queryNode* queryNodeHead);
 static void free_query_node(queryNode* queryNodeHead);
+static int parse_query_string(queryNode* queryNodeHead); 
+static void traverse_query_string(queryNode* queryNodeHead);
 
 int main()
 {
-  char thingID[MAX_ID_LEN]; /*eg: PIC32WK-B16B00*/
+  char thingID[MAX_ID_LEN]; /*eg: CIP23KW-B16B00*/
 
   printf("Content-type: text/html\n\n");
 
@@ -33,6 +35,9 @@ int main()
   queryNode queryNodeHead;
   queryNodeHead.next=NULL;
   allocate_query_nodes(&queryNodeHead);
+
+  parse_query_string(&queryNodeHead);
+  traverse_query_string(&queryNodeHead);
   free_query_node(&queryNodeHead);
 
 
@@ -41,9 +46,10 @@ int main()
 
 
 /*extract thing ID from requestURI*/
-static unsigned int get_thing_id(char* thingID)
+static int get_thing_id(char* thingID)
 {
   char* requestURI=getenv("REQUEST_URI");
+
   if (NULL!=requestURI){
     strncpy(thingID,strtok((strrchr(requestURI,'/')+1),"?"),MAX_ID_LEN);
     return 0;
@@ -55,35 +61,37 @@ static unsigned int get_thing_id(char* thingID)
 
 
 /*find number of queries*/
-static unsigned int get_query_count(void)
+static int get_query_count(void)
 {
   char* query=getenv("QUERY_STRING");
-  int count=0;
+  int queryCount=0;
+
   if (NULL!=query){
     unsigned int queryLength=strlen(query);
     for(int i=0;i<=queryLength;i++){
-      if ('='==query[i]) count++;
+      if ('='==query[i]) queryCount++;
     }
   }
-  return count;
+  return queryCount;
 }
 
 
 /*create a linked list to store the queries*/
-static unsigned int allocate_query_nodes(queryNode* queryNodeHead)
+static int allocate_query_nodes(queryNode* queryNodeHead)
 {
-  int count = get_query_count();
+  int queryCount = get_query_count()-1;
+
   if(NULL!=queryNodeHead->next){
     return -1; /*already initialized*/
   }
   else{
     queryNode* newNode;
-    while(count>0){
+    while(queryCount>0){
       newNode=(queryNode*)calloc(1,sizeof(queryNode));
       if(NULL!=newNode){
         queryNodeHead->next=newNode;
         queryNodeHead=newNode;
-        count--;
+        queryCount--;
       }
       else{
         return -2; /*calloc failed*/
@@ -99,11 +107,48 @@ static void free_query_node(queryNode* queryNodeHead)
 {
   queryNode* queryNodeHandle=queryNodeHead->next;
   queryNode* queryNodeTemp;
+
+  free(queryNodeHead->key);
+  free(queryNodeHead->value);
   while(NULL!=queryNodeHandle){
     queryNodeTemp=queryNodeHandle->next;
+    free(queryNodeHandle->key);
+    free(queryNodeHandle->value);
     free(queryNodeHandle);
     queryNodeHandle=queryNodeTemp;
   }
   free(queryNodeHandle);
   queryNodeHead->next=NULL;
+}
+
+
+static int parse_query_string(queryNode* queryNodeHead)
+{
+  char *query=getenv("QUERY_STRING");
+  int queryCount = get_query_count();
+  char *key, *value;
+
+  for (int i=0;i<queryCount;i++){
+    key=strtok(query,"=");
+    queryNodeHead->key=(char*)malloc(sizeof(char) * (strlen(key)+1));
+    strcpy(queryNodeHead->key,key);
+
+    query+=strlen(key)+sizeof(char);
+
+    value=strtok(query,"&");
+    queryNodeHead->value=(char*)malloc(sizeof(char) * (strlen(value)+1));
+    strcpy(queryNodeHead->value,value);
+    query+=strlen(value)+sizeof(char);
+
+    queryNodeHead=queryNodeHead->next;
+  }
+  return 0;
+}
+
+static void traverse_query_string(queryNode* queryNodeHead)
+{
+  while(NULL!=queryNodeHead){
+    printf("%s:%s\n",queryNodeHead->key,queryNodeHead->value);
+    queryNodeHead=queryNodeHead->next;
+  } 
 }
