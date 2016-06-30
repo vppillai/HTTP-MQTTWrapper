@@ -20,6 +20,7 @@ static int allocate_query_nodes(queryNode* queryNodeHead);
 static void free_query_node(queryNode* queryNodeHead);
 static int parse_query_string(queryNode* queryNodeHead); 
 static void traverse_query_string(queryNode* queryNodeHead);
+static int mqtt_pub(char* thingID,queryNode* queryNodeHead);
 
 int main()
 {
@@ -38,9 +39,10 @@ int main()
 
   parse_query_string(&queryNodeHead);
   traverse_query_string(&queryNodeHead);
+
+  get_thing_id(thingID);
+  mqtt_pub(thingID,&queryNodeHead);
   free_query_node(&queryNodeHead);
-
-
   return 0;
 }
 
@@ -148,7 +150,32 @@ static int parse_query_string(queryNode* queryNodeHead)
 static void traverse_query_string(queryNode* queryNodeHead)
 {
   while(NULL!=queryNodeHead){
-    printf("%s:%s\n",queryNodeHead->key,queryNodeHead->value);
+//    printf("%s:%s\n",queryNodeHead->key,queryNodeHead->value);
     queryNodeHead=queryNodeHead->next;
   } 
+}
+
+
+static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
+{
+  char query[1000];
+  query[0]='\0';
+  char command[1000];
+  
+  while(NULL!=queryNodeHead->next){
+    strcat(query,queryNodeHead->key);
+    strcat(query,"=");
+    strcat(query,queryNodeHead->value);
+    strcat(query,"&");
+    queryNodeHead=queryNodeHead->next;
+  }
+    strcat(query,queryNodeHead->key);
+    strcat(query,"=");
+    strcat(query,queryNodeHead->value);
+ 
+
+  sprintf(command, "mosquitto_pub -t %s -m \"%s\" -q 1",thingID,query);
+  printf("%s\n",command);
+  system(command);
+  return(0);
 }
