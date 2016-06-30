@@ -123,7 +123,7 @@ static void free_query_node(queryNode* queryNodeHead)
   queryNodeHead->next=NULL;
 }
 
-
+/*parse teh query string and store it in teh queryNode LL*/
 static int parse_query_string(queryNode* queryNodeHead)
 {
   char *query=getenv("QUERY_STRING");
@@ -147,15 +147,17 @@ static int parse_query_string(queryNode* queryNodeHead)
   return 0;
 }
 
+/*a local test function to traverse the LL and print its contents*/
 static void traverse_query_string(queryNode* queryNodeHead)
 {
   while(NULL!=queryNodeHead){
-//    printf("%s:%s\n",queryNodeHead->key,queryNodeHead->value);
+    printf("%s:%s\n",queryNodeHead->key,queryNodeHead->value);
     queryNodeHead=queryNodeHead->next;
   } 
 }
 
 
+/*publish the reconstructed queryString to topic-thingID*/
 static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
 {
   char query[1000];
