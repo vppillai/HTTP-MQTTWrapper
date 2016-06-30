@@ -23,6 +23,8 @@ int main()
 {
   char thingID[MAX_ID_LEN]; /*eg: PIC32WK-B16B00*/
 
+  printf("Content-type: text/html\n\n");
+
   /*debug and test*/
   if (NULL!=getenv("DEBUG")){debug=1;}
   if(0!=debug){if(!get_thing_id(thingID)) printf("thingID: %s\n",thingID);}
@@ -32,6 +34,7 @@ int main()
   queryNodeHead.next=NULL;
   allocate_query_nodes(&queryNodeHead);
   free_query_node(&queryNodeHead);
+
 
   return 0;
 }
