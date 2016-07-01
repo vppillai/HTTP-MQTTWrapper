@@ -123,7 +123,7 @@ static void free_query_node(queryNode* queryNodeHead)
   queryNodeHead->next=NULL;
 }
 
-/*parse teh query string and store it in teh queryNode LL*/
+/*parse the query string and store it in the queryNode LL*/
 static int parse_query_string(queryNode* queryNodeHead)
 {
   char *query=getenv("QUERY_STRING");
@@ -151,7 +151,7 @@ static int parse_query_string(queryNode* queryNodeHead)
 static void traverse_query_string(queryNode* queryNodeHead)
 {
   while(NULL!=queryNodeHead){
-    printf("%s:%s\n",queryNodeHead->key,queryNodeHead->value);
+    //printf("%s:%s\n",queryNodeHead->key,queryNodeHead->value);
     queryNodeHead=queryNodeHead->next;
   } 
 }
@@ -160,24 +160,27 @@ static void traverse_query_string(queryNode* queryNodeHead)
 /*publish the reconstructed queryString to topic-thingID*/
 static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
 {
+  /*sample: {"hello":"world","foo":"bar"} */
   char query[1000];
   query[0]='\0';
   char command[1000];
   
+    strcat(query,"{\"");
   while(NULL!=queryNodeHead->next){
     strcat(query,queryNodeHead->key);
-    strcat(query,"=");
+    strcat(query,"\":\"");
     strcat(query,queryNodeHead->value);
-    strcat(query,"&");
+    strcat(query,"\",\"");
     queryNodeHead=queryNodeHead->next;
   }
     strcat(query,queryNodeHead->key);
-    strcat(query,"=");
+    strcat(query,"\":\"");
     strcat(query,queryNodeHead->value);
+    strcat(query,"\"}");
  
 
-  sprintf(command, "mosquitto_pub -t %s -m \"%s\" -q 1",thingID,query);
-  printf("%s\n",command);
+  sprintf(command, "mosquitto_pub -t %s -m '%s' -q 1",thingID,query);
+  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"2016-07-01T14:50:31.911Z\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,query);
   system(command);
   return(0);
 }
