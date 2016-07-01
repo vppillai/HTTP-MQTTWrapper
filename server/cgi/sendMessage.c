@@ -37,7 +37,7 @@ int main()
 {
   char thingID[MAX_ID_LEN]; /*eg: CIP23KW-B16B00*/
 
-  printf("Content-type: text/html\n\n");
+  printf("Content-type: application/json\n\n");
 
   /*debug and test*/
   if (NULL!=getenv("DEBUG")){debug=1;}
@@ -177,8 +177,8 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
   /*sample: {"hello":"world","foo":"bar"} */
 
   unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+10)  ;
-  char *query=calloc(1,queryLength);
-  char *command=calloc(1,queryLength+(sizeof(char)*(strlen(thingID)+10)));
+  char *query=(char*)calloc(1,queryLength);
+  char *command=(char*)calloc(1,queryLength+(sizeof(char)*(strlen(thingID)+10)));
   
     strcat(query,"{\"");
   while(NULL!=queryNodeHead->next){
@@ -197,7 +197,7 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
   sprintf(command, "mosquitto_pub -t %s -m '%s' -q 1",thingID,query);
   printf("{\"with\":{\"thing\":\"%s\",\"created\":\"2016-07-01T14:50:31.911Z\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,query);
   system(command);
-  free(command);
   free(query);
+  //free(command);
   return(0);
 }
