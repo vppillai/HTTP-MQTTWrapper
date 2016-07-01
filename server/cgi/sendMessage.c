@@ -2,6 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+/*
+ *TODO: add size limit checks to enhance security
+ *TODO: optimize size usage of query and command strings
+ *
+ */
+
 #define MAX_ID_LEN 20
 static unsigned char debug=0;
 
@@ -13,6 +20,10 @@ struct queryNode{
   char* value;
   queryNode* next;
 };
+
+char* QUERY_STRING;
+char* REQUEST_URI;
+int gQueryCount;
 
 static int get_thing_id(char* thingID);
 static int get_query_count(void);
@@ -30,8 +41,11 @@ int main()
 
   /*debug and test*/
   if (NULL!=getenv("DEBUG")){debug=1;}
-  if(0!=debug){if(!get_thing_id(thingID)) printf("thingID: %s\n",thingID);}
-  if(0!=debug){printf("queryCount: %d\n",get_query_count());}
+  
+  /*init global*/
+  REQUEST_URI=getenv("REQUEST_URI");
+  QUERY_STRING=getenv("QUERY_STRING");
+  gQueryCount=get_query_count();
 
   queryNode queryNodeHead;
   queryNodeHead.next=NULL;
@@ -50,7 +64,7 @@ int main()
 /*extract thing ID from requestURI*/
 static int get_thing_id(char* thingID)
 {
-  char* requestURI=getenv("REQUEST_URI");
+  char* requestURI=REQUEST_URI;
 
   if (NULL!=requestURI){
     strncpy(thingID,strtok((strrchr(requestURI,'/')+1),"?"),MAX_ID_LEN);
@@ -65,7 +79,7 @@ static int get_thing_id(char* thingID)
 /*find number of queries*/
 static int get_query_count(void)
 {
-  char* query=getenv("QUERY_STRING");
+  char* query=QUERY_STRING;
   int queryCount=0;
 
   if (NULL!=query){
@@ -81,7 +95,7 @@ static int get_query_count(void)
 /*create a linked list to store the queries*/
 static int allocate_query_nodes(queryNode* queryNodeHead)
 {
-  int queryCount = get_query_count()-1;
+  int queryCount = gQueryCount-1;
 
   if(NULL!=queryNodeHead->next){
     return -1; /*already initialized*/
@@ -126,8 +140,8 @@ static void free_query_node(queryNode* queryNodeHead)
 /*parse the query string and store it in the queryNode LL*/
 static int parse_query_string(queryNode* queryNodeHead)
 {
-  char *query=getenv("QUERY_STRING");
-  int queryCount = get_query_count();
+  char *query=QUERY_STRING;
+  int queryCount = gQueryCount;
   char *key, *value;
 
   for (int i=0;i<queryCount;i++){
@@ -161,9 +175,10 @@ static void traverse_query_string(queryNode* queryNodeHead)
 static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
 {
   /*sample: {"hello":"world","foo":"bar"} */
-  char query[1000];
-  query[0]='\0';
-  char command[1000];
+
+  unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+10)  ;
+  char *query=calloc(1,queryLength);
+  char *command=calloc(1,queryLength+(sizeof(char)*(strlen(thingID)+10)));
   
     strcat(query,"{\"");
   while(NULL!=queryNodeHead->next){
@@ -182,5 +197,7 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
   sprintf(command, "mosquitto_pub -t %s -m '%s' -q 1",thingID,query);
   printf("{\"with\":{\"thing\":\"%s\",\"created\":\"2016-07-01T14:50:31.911Z\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,query);
   system(command);
+  free(command);
+  free(query);
   return(0);
 }
