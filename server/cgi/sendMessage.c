@@ -40,10 +40,10 @@ int main(int argc, char *argv[])
   char thingID[MAX_ID_LEN]; /*eg: CIP23KW-B16B00*/
   int retVal;
 
-  
+
   /*debug and test*/
   if (NULL!=getenv("DEBUG")){debug=1;}
-  
+
   /*init global*/
   REQUEST_URI=getenv("REQUEST_URI");
   QUERY_STRING=getenv("QUERY_STRING");
@@ -57,25 +57,27 @@ int main(int argc, char *argv[])
 
   switch(retVal){
     case -1 :
+      printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_ALREADY_ALLOCATED\",\"reason\":\"node already allocated\"}}");
       exit(0);  
       break;
     case -2 : 
-        printf("status: 500 Internal Server Error\n\n");
-        printf("{\"error\":{\"code\":\"ERR_NODE_CALLOC_FAILED\",\"reason\":\"failed to calloc node\"}}");
-        exit(0);  
-        break;
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 500 Internal Server Error\n\n");
+      printf("{\"error\":{\"code\":\"ERR_NODE_CALLOC_FAILED\",\"reason\":\"failed to calloc node\"}}");
+      exit(0);  
+      break;
     case 0 :
-          break;
+      break;
     default:
-            break;
+      break;
   }
 
   parse_query_string(&queryNodeHead);
   traverse_query_string(&queryNodeHead);
 
-  printf("Content-type: application/json\n\n");
+  printf("Content-type: application/json; charset=utf-8\n\n");
   mqtt_pub(thingID,&queryNodeHead);
   free_query_node(&queryNodeHead);
   return 0;
@@ -92,6 +94,7 @@ static int get_thing_id(char* thingID)
       strncpy(thingID,tempID,MAX_ID_LEN);
     }
     else{
+      printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 400 Bad request\n\n");
       printf("{\"error\":{\"code\":\"ERR_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}"); /*test case: request ending in / */
       exit(0); /*if there is no thing, then there is no thang*/ 
