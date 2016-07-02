@@ -38,8 +38,8 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead);
 int main(int argc, char *argv[])
 {
   char thingID[MAX_ID_LEN]; /*eg: CIP23KW-B16B00*/
+  int retVal;
 
-  printf("Content-type: application/json\n\n");
   
   /*debug and test*/
   if (NULL!=getenv("DEBUG")){debug=1;}
@@ -49,14 +49,33 @@ int main(int argc, char *argv[])
   QUERY_STRING=getenv("QUERY_STRING");
   gQueryCount=get_query_count();
 
+  get_thing_id(thingID);
+
   queryNode queryNodeHead;
   queryNodeHead.next=NULL;
-  allocate_query_nodes(&queryNodeHead);
+  retVal=allocate_query_nodes(&queryNodeHead);
+
+  switch(retVal){
+    case -1 :
+      printf("status: 500 Internal Server Error\n\n");
+      printf("{\"error\":{\"code\":\"ERR_ALREADY_ALLOCATED\",\"reason\":\"node already allocated\"}}");
+      exit(0);  
+      break;
+    case -2 : 
+        printf("status: 500 Internal Server Error\n\n");
+        printf("{\"error\":{\"code\":\"ERR_NODE_CALLOC_FAILED\",\"reason\":\"failed to calloc node\"}}");
+        exit(0);  
+        break;
+    case 0 :
+          break;
+    default:
+            break;
+  }
 
   parse_query_string(&queryNodeHead);
   traverse_query_string(&queryNodeHead);
 
-  get_thing_id(thingID);
+  printf("Content-type: application/json\n\n");
   mqtt_pub(thingID,&queryNodeHead);
   free_query_node(&queryNodeHead);
   return 0;
@@ -68,13 +87,14 @@ static int get_thing_id(char* thingID)
 {
 
   if (NULL!=REQUEST_URI){
-     char *tempID=strtok((strrchr(REQUEST_URI,'/')+1),"?");
+    char *tempID=strtok((strrchr(REQUEST_URI,'/')+1),"?");
     if(NULL!=tempID){
       strncpy(thingID,tempID,MAX_ID_LEN);
     }
     else{
-      printf("{\"error\":{\"code\":\"ERR_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}");
-      exit(0);  
+      printf("status: 400 Bad request\n\n");
+      printf("{\"error\":{\"code\":\"ERR_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}"); /*test case: request ending in / */
+      exit(0); /*if there is no thing, then there is no thang*/ 
     }
     return 0;
   }
@@ -87,26 +107,26 @@ static int get_thing_id(char* thingID)
 /*find number of queries*/
 static int get_query_count(void)
 {
-  int queryCount_eql=0;
-  int queryCount_amb=0;
 
   if (NULL!=QUERY_STRING){
+    int queryCount_eql=0;
+    int queryCount_amb=0;
     unsigned int queryLength=strlen(QUERY_STRING);
-      for(int i=0;i<=queryLength;i++){
-        if ('='==QUERY_STRING[i]) queryCount_eql++;
+    for(int i=0;i<=queryLength;i++){
+      if ('='==QUERY_STRING[i]) queryCount_eql++;
+    }
+    for(int i=0;i<=queryLength;i++){
+      if ('&'==QUERY_STRING[i]) queryCount_amb++;
+    }
+    if(1==queryCount_eql){
+      return 1;
+    }
+    else{
+      if(queryCount_eql != (queryCount_amb+1)) return 0; /*we dont support non key=val queries*/
+      else {
+        return queryCount_eql;
       }
-      for(int i=0;i<=queryLength;i++){
-        if ('&'==QUERY_STRING[i]) queryCount_amb++;
-      }
-      if(1==queryCount_eql){
-        return 1;
-      }
-      else{
-        if(queryCount_eql != (queryCount_amb+1)) return 0; //we dont support non key=val queries
-        else {
-          return queryCount_eql;
-        }
-      }
+    }
   }
   else{
     return 0;
@@ -121,7 +141,7 @@ static int allocate_query_nodes(queryNode* queryNodeHead)
     return 0;
 
 
-  int queryCount = gQueryCount-1;
+  int queryCount = gQueryCount-1; /*we already gave head*/
 
   if(NULL!=queryNodeHead->next){
     return -1; /*already initialized*/
