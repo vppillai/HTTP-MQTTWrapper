@@ -92,7 +92,6 @@ static int get_query_count(void)
       for(int i=0;i<=queryLength;i++){
         if ('&'==QUERY_STRING[i]) queryCount_amb++;
       }
-      printf("\n\n=:%d,&:%d\n\n",queryCount_eql,queryCount_amb);
       if(1==queryCount_eql){
         return 1;
       }
