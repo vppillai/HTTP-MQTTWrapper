@@ -68,8 +68,6 @@ static int get_thing_id(char* thingID)
 
   if (NULL!=requestURI){
     strncpy(thingID,strtok((strrchr(requestURI,'/')+1),"?"),MAX_ID_LEN);
-
-    printf("\n\n%s\n\n\n",thingID);
     return 0;
   }
   else{
