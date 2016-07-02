@@ -10,6 +10,8 @@
  */
 
 #define MAX_ID_LEN 20
+#define PUB_COMMAND_TEMPLATE  "mosquitto_pub -t %s -m '%s' -q 1"
+
 static unsigned char debug=0;
 
 
@@ -21,8 +23,8 @@ struct queryNode{
   queryNode* next;
 };
 
-char* QUERY_STRING;
 char* REQUEST_URI;
+char* QUERY_STRING;
 int gQueryCount;
 
 static int get_thing_id(char* thingID);
@@ -38,7 +40,7 @@ int main(int argc, char *argv[])
   char thingID[MAX_ID_LEN]; /*eg: CIP23KW-B16B00*/
 
   printf("Content-type: application/json\n\n");
-
+  
   /*debug and test*/
   if (NULL!=getenv("DEBUG")){debug=1;}
   
@@ -79,16 +81,31 @@ static int get_thing_id(char* thingID)
 /*find number of queries*/
 static int get_query_count(void)
 {
-  char* query=QUERY_STRING;
-  int queryCount=0;
+  int queryCount_eql=0;
+  int queryCount_amb=0;
 
-  if (NULL!=query){
-    unsigned int queryLength=strlen(query);
-    for(int i=0;i<=queryLength;i++){
-      if ('='==query[i]) queryCount++;
-    }
+  if (NULL!=QUERY_STRING){
+    unsigned int queryLength=strlen(QUERY_STRING);
+      for(int i=0;i<=queryLength;i++){
+        if ('='==QUERY_STRING[i]) queryCount_eql++;
+      }
+      for(int i=0;i<=queryLength;i++){
+        if ('&'==QUERY_STRING[i]) queryCount_amb++;
+      }
+      printf("\n\n=:%d,&:%d\n\n",queryCount_eql,queryCount_amb);
+      if(1==queryCount_eql){
+        return 1;
+      }
+      else{
+        if(queryCount_eql != (queryCount_amb+1)) return 0; //we dont support non key=val queries
+        else {
+          return queryCount_eql;
+        }
+      }
   }
-  return queryCount;
+  else{
+    return 0;
+  }
 }
 
 
@@ -147,11 +164,18 @@ static void free_query_node(queryNode* queryNodeHead)
 /*parse the query string and store it in the queryNode LL*/
 static int parse_query_string(queryNode* queryNodeHead)
 {
-  char *query=QUERY_STRING;
-  int queryCount = gQueryCount;
+  char *query;
   char *key, *value;
 
-  for (int i=0;i<queryCount;i++){
+  if(0!=gQueryCount){
+    query=(char*)calloc(1,sizeof(char)*(strlen(QUERY_STRING)+1));
+    strcpy(query,QUERY_STRING);
+  }
+  else{
+    return 0;
+  }
+
+  for (int i=0;i<gQueryCount;i++){
     key=strtok(query,"=");
     queryNodeHead->key=(char*)malloc(sizeof(char) * (strlen(key)+1));
     strcpy(queryNodeHead->key,key);
@@ -185,10 +209,10 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
   char *query,*command;
 
   if(gQueryCount>0){
-    unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+10)  ;
-    query=(char*)calloc(1,queryLength);
-    command=(char*)calloc(1,queryLength+(sizeof(char)*(strlen(thingID)+10)));
-    strcat(query,"{\"");
+    unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+100);
+    query=(char*)malloc(queryLength);
+    command=(char*)malloc(queryLength+(sizeof(char)*(strlen(thingID)+strlen(PUB_COMMAND_TEMPLATE)+10)));
+    strcpy(query,"{\"");
     while(NULL!=queryNodeHead->next){
       strcat(query,queryNodeHead->key);
       strcat(query,"\":\"");
@@ -203,11 +227,11 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
   }
   else{
     query="{}";
-    command=(char*)calloc(1,(sizeof(char)*(strlen(thingID)+10)));
+    command=(char*)calloc(1,(sizeof(char)*(strlen(thingID)+strlen(PUB_COMMAND_TEMPLATE)+10)));
   }
 
 
-  sprintf(command, "mosquitto_pub -t %s -m '%s' -q 1",thingID,query);
+  sprintf(command, PUB_COMMAND_TEMPLATE,thingID,query);
   system(command);
   printf("{\"with\":{\"thing\":\"%s\",\"created\":\"2016-07-01T14:50:31.911Z\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,query);
   //free(query);
