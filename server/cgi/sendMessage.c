@@ -49,7 +49,29 @@ int main(int argc, char *argv[])
   QUERY_STRING=getenv("QUERY_STRING");
   gQueryCount=get_query_count();
 
-  get_thing_id(thingID);
+  retVal=get_thing_id(thingID);
+  switch(retVal){
+    case -1:
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 400 Bad request\n\n");
+      printf("{\"error\":{\"code\":\"ERR_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}"); /*test case: request ending in / */
+      exit(0); /*if there is no thing, then there is no thang*/ 
+      break;
+    case -2:
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 500 Internal Server Error\n\n");
+      printf("{\"error\":{\"code\":\"ERR_REQUEST_STRING_EMPTY\",\"reason\":\"request string is empty\"}}"); 
+      exit(0); 
+      break;
+    case 0:
+      break;
+    default:
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 500 Internal Server Error\n\n");
+      printf("{\"error\":{\"code\":\"ERR_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
+      exit(0); 
+      break;
+  }
 
   queryNode queryNodeHead;
   queryNodeHead.next=NULL;
@@ -71,6 +93,10 @@ int main(int argc, char *argv[])
     case 0 :
       break;
     default:
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 500 Internal Server Error\n\n");
+      printf("{\"error\":{\"code\":\"ERR_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
+      exit(0); 
       break;
   }
 
@@ -94,15 +120,12 @@ static int get_thing_id(char* thingID)
       strncpy(thingID,tempID,MAX_ID_LEN);
     }
     else{
-      printf("Content-type: application/json; charset=utf-8\n");
-      printf("status: 400 Bad request\n\n");
-      printf("{\"error\":{\"code\":\"ERR_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}"); /*test case: request ending in / */
-      exit(0); /*if there is no thing, then there is no thang*/ 
+      return -1;
     }
     return 0;
   }
   else{
-    return -1;
+    return -2;
   }
 }
 
