@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <libgen.h>
 
 /*
  *TODO: add size limit checks to enhance security
@@ -33,7 +33,7 @@ static int parse_query_string(queryNode* queryNodeHead);
 static void traverse_query_string(queryNode* queryNodeHead);
 static int mqtt_pub(char* thingID,queryNode* queryNodeHead);
 
-int main()
+int main(int argc, char *argv[])
 {
   char thingID[MAX_ID_LEN]; /*eg: CIP23KW-B16B00*/
 
@@ -68,6 +68,8 @@ static int get_thing_id(char* thingID)
 
   if (NULL!=requestURI){
     strncpy(thingID,strtok((strrchr(requestURI,'/')+1),"?"),MAX_ID_LEN);
+
+    printf("\n\n%s\n\n\n",thingID);
     return 0;
   }
   else{
@@ -95,6 +97,10 @@ static int get_query_count(void)
 /*create a linked list to store the queries*/
 static int allocate_query_nodes(queryNode* queryNodeHead)
 {
+  if(0==gQueryCount)
+    return 0;
+
+
   int queryCount = gQueryCount-1;
 
   if(NULL!=queryNodeHead->next){
@@ -123,6 +129,9 @@ static void free_query_node(queryNode* queryNodeHead)
 {
   queryNode* queryNodeHandle=queryNodeHead->next;
   queryNode* queryNodeTemp;
+
+  if(0==gQueryCount)
+    return;
 
   free(queryNodeHead->key);
   free(queryNodeHead->value);
@@ -175,29 +184,35 @@ static void traverse_query_string(queryNode* queryNodeHead)
 static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
 {
   /*sample: {"hello":"world","foo":"bar"} */
+  char *query,*command;
 
-  unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+10)  ;
-  char *query=(char*)calloc(1,queryLength);
-  char *command=(char*)calloc(1,queryLength+(sizeof(char)*(strlen(thingID)+10)));
-  
+  if(gQueryCount>0){
+    unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+10)  ;
+    query=(char*)calloc(1,queryLength);
+    command=(char*)calloc(1,queryLength+(sizeof(char)*(strlen(thingID)+10)));
     strcat(query,"{\"");
-  while(NULL!=queryNodeHead->next){
-    strcat(query,queryNodeHead->key);
-    strcat(query,"\":\"");
-    strcat(query,queryNodeHead->value);
-    strcat(query,"\",\"");
-    queryNodeHead=queryNodeHead->next;
-  }
+    while(NULL!=queryNodeHead->next){
+      strcat(query,queryNodeHead->key);
+      strcat(query,"\":\"");
+      strcat(query,queryNodeHead->value);
+      strcat(query,"\",\"");
+      queryNodeHead=queryNodeHead->next;
+    }
     strcat(query,queryNodeHead->key);
     strcat(query,"\":\"");
     strcat(query,queryNodeHead->value);
     strcat(query,"\"}");
- 
+  }
+  else{
+    query="{}";
+    command=(char*)calloc(1,(sizeof(char)*(strlen(thingID)+10)));
+  }
+
 
   sprintf(command, "mosquitto_pub -t %s -m '%s' -q 1",thingID,query);
-  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"2016-07-01T14:50:31.911Z\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,query);
   system(command);
-  free(query);
+  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"2016-07-01T14:50:31.911Z\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,query);
+  //free(query);
   //free(command);
   return(0);
 }
