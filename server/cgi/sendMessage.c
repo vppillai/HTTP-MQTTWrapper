@@ -66,10 +66,16 @@ int main(int argc, char *argv[])
 /*extract thing ID from requestURI*/
 static int get_thing_id(char* thingID)
 {
-  char* requestURI=REQUEST_URI;
 
-  if (NULL!=requestURI){
-    strncpy(thingID,strtok((strrchr(requestURI,'/')+1),"?"),MAX_ID_LEN);
+  if (NULL!=REQUEST_URI){
+     char *tempID=strtok((strrchr(REQUEST_URI,'/')+1),"?");
+    if(NULL!=tempID){
+      strncpy(thingID,tempID,MAX_ID_LEN);
+    }
+    else{
+      printf("{\"error\":{\"code\":\"ERR_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}");
+      exit(0);  
+    }
     return 0;
   }
   else{
