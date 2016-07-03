@@ -3,11 +3,13 @@
 #include <string.h>
 #include <libgen.h>
 #include <time.h>
+#include <sys/time.h>
 
 /*
  *TODO: add size limit checks to enhance security
  *TODO: support MQTT topic structures
- *TODO: add better transaction IDs to jsons
+ *TODO: add more info to  session IDs.
+ *TODO: make session ID forming a seperate func and use in all jsons
  *TODO: add optional logging
  *TODO: handle all alloc return cases
  */
@@ -299,6 +301,7 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead,message_t messageType
   char *query,*command;
   unsigned int allocQueryFlag=0;
   time_t epochTime;
+  struct timeval tv;
   
   char *commandTemplate;
   switch(messageType)
@@ -344,17 +347,19 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead,message_t messageType
       break;
   }
 
-
   epochTime=time(NULL);
   char *timeStr=asctime(gmtime(&epochTime));
   timeStr[strlen(timeStr) - 1] = 0;
 
+  gettimeofday(&tv, NULL);
+  unsigned long long epochMilSec = (unsigned long long)(tv.tv_sec) * 1000 + (unsigned long long)(tv.tv_usec) / 1000;
+
   char transactionString[64];
-  snprintf(transactionString,(sizeof(char)*63),"%s:%s-%x",getenv("REMOTE_ADDR"),getenv("REMOTE_PORT"),(int)epochTime);
+  snprintf(transactionString,(sizeof(char)*63),"%s:%s-%llx",getenv("REMOTE_ADDR"),getenv("REMOTE_PORT"),epochMilSec);
     
   system(command);
   
-  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"%s\",\"content\":%s,\"transaction\":\"%s\"}}",thingID,timeStr,query,transactionString);
+  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"%s\",\"content\":%s,\"session\":\"%s\"}}",thingID,timeStr,query,transactionString);
   
   if (0!=allocQueryFlag) free(query);
   free(command);
