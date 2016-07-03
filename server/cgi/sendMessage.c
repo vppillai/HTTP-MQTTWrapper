@@ -315,10 +315,13 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
   epochTime=time(NULL);
   char *timeStr=asctime(gmtime(&epochTime));
   timeStr[strlen(timeStr) - 1] = 0;
-  
+
+  char transactionString[64];
+  snprintf(transactionString,(sizeof(char)*63),"%s:%s-%x",getenv("REMOTE_ADDR"),getenv("REMOTE_PORT"),(int)epochTime);
+    
   system(command);
   
-  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"%s\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,timeStr,query);
+  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"%s\",\"content\":%s,\"transaction\":\"%s\"}}",thingID,timeStr,query,transactionString);
   
   if (0!=allocQueryFlag) free(query);
   free(command);
