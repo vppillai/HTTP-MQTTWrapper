@@ -36,8 +36,8 @@ static char* QUERY_STRING;
 static int gQueryCount;
 
 /*global memory allocation flags*/
-static char *gaf_thingID=0;
-
+static char *gaf_thingID=NULL;
+static queryNode *gaf_queryNodeHead=NULL;
 
 static int get_thingID(char **thingID);
 static void process_get_thingID_retval(int retval);
@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
   process_get_thingID_retval(get_thingID(&thingID));
 
   queryNode queryNodeHead;
+  gaf_queryNodeHead=&queryNodeHead;
   memset(&queryNodeHead,0,sizeof(queryNode));
   process_alloc_query_nodes_retval(alloc_query_nodes(&queryNodeHead));
 
@@ -74,7 +75,6 @@ int main(int argc, char *argv[])
   printf("Content-type: application/json; charset=utf-8\n\n");
 
   mqtt_pub(thingID,&queryNodeHead,MESSAGE_TYPE_STD);
-  free_query_node(&queryNodeHead);
   clean_exit(0);
   return 0;
 }
@@ -368,5 +368,8 @@ static int clean_exit(int retVal)
     free((void*)gaf_thingID);
   }
 
+  if(NULL!=gaf_queryNodeHead){
+    free_query_node(gaf_queryNodeHead);
+  }
   exit(retVal);
 }
