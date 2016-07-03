@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libgen.h>
+#include <time.h>
 
 /*
  *TODO: add size limit checks to enhance security
  *TODO: support MQTT topic structures
- *TODO: add date and time to jsons
  *TODO: add transaction IDs to jsons
  *TODO: add optional logging
+ *TODO: handle all alloc return cases
  */
 
 #define PUB_COMMAND_TEMPLATE  "mosquitto_pub -t %s -m '%s' -q 1"
@@ -282,6 +283,8 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
   /*sample: {"hello":"world","foo":"bar"} */
   char *query,*command;
   unsigned int allocQueryFlag=0;
+  time_t epochTime;
+
 
   if(gQueryCount>0){
     unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+10);
@@ -307,12 +310,19 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
     command=(char*)calloc(1,(sizeof(char)*(strlen(thingID)+strlen(PUB_COMMAND_TEMPLATE)+10)));
   }
 
-
   sprintf(command, PUB_COMMAND_TEMPLATE,thingID,query);
+
+  epochTime=time(NULL);
+  char *timeStr=asctime(gmtime(&epochTime));
+  timeStr[strlen(timeStr) - 1] = 0;
+  
   system(command);
-  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"2016-07-01T14:50:31.911Z\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,query);
+  
+  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"%s\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,timeStr,query);
+  
   if (0!=allocQueryFlag) free(query);
   free(command);
+  
   return(0);
 }
 
