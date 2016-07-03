@@ -5,11 +5,11 @@
 
 /*
  *TODO: add size limit checks to enhance security
- *TODO: optimize size usage of query and command strings
- *
+ *TODO: support MQTT topic structures
+ *TODO: add date and time to jsons
+ *TODO: add transaction IDs to jsons
  */
 
-#define MAX_ID_LEN 20
 #define PUB_COMMAND_TEMPLATE  "mosquitto_pub -t %s -m '%s' -q 1"
 
 static unsigned char debug=0;
@@ -23,21 +23,27 @@ struct queryNode{
   queryNode* next;
 };
 
-char* REQUEST_URI;
-char* QUERY_STRING;
-int gQueryCount;
+/*global speed up variables*/
+static char* REQUEST_URI;
+static char* QUERY_STRING;
+static int gQueryCount;
 
-static int get_thing_id(char* thingID);
+/*global memory allocation flags*/
+static char *gaf_thingID=0;
+
+
+static int get_thing_id(char **thingID);
 static int get_query_count(void);
 static int allocate_query_nodes(queryNode* queryNodeHead);
 static void free_query_node(queryNode* queryNodeHead);
 static int parse_query_string(queryNode* queryNodeHead); 
 static void traverse_query_string(queryNode* queryNodeHead);
 static int mqtt_pub(char* thingID,queryNode* queryNodeHead);
+static int clean_exit(int);
 
 int main(int argc, char *argv[])
 {
-  char thingID[MAX_ID_LEN]; /*eg: CIP23KW-B16B00*/
+  char *thingID=NULL;
   int retVal;
 
 
@@ -49,19 +55,25 @@ int main(int argc, char *argv[])
   QUERY_STRING=getenv("QUERY_STRING");
   gQueryCount=get_query_count();
 
-  retVal=get_thing_id(thingID);
+  retVal=get_thing_id(&thingID);
   switch(retVal){
     case -1:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 400 Bad request\n\n");
       printf("{\"error\":{\"code\":\"ERR_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}"); /*test case: request ending in / */
-      exit(0); /*if there is no thing, then there is no thang*/ 
+      clean_exit(-1); /*if there is no thing, then there is no thang*/ 
       break;
     case -2:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_REQUEST_STRING_EMPTY\",\"reason\":\"request string is empty\"}}"); 
-      exit(0); 
+      clean_exit(-2); 
+      break;
+    case -3:
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 500 Internal Server Error\n\n");
+      printf("{\"error\":{\"code\":\"ERR_ALLOC_ID_FAILED\",\"reason\":\"ID allock failed\"}}"); 
+      clean_exit(-3); 
       break;
     case 0:
       break;
@@ -69,7 +81,7 @@ int main(int argc, char *argv[])
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
-      exit(0); 
+      clean_exit(-4); 
       break;
   }
 
@@ -82,13 +94,13 @@ int main(int argc, char *argv[])
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_ALREADY_ALLOCATED\",\"reason\":\"node already allocated\"}}");
-      exit(0);  
+      clean_exit(-5);  
       break;
     case -2 : 
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
-      printf("{\"error\":{\"code\":\"ERR_NODE_CALLOC_FAILED\",\"reason\":\"failed to calloc node\"}}");
-      exit(0);  
+      printf("{\"error\":{\"code\":\"ERR_NODE_ALLOC_FAILED\",\"reason\":\"failed to alloc node\"}}");
+      clean_exit(-6);  
       break;
     case 0 :
       break;
@@ -96,7 +108,7 @@ int main(int argc, char *argv[])
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
-      exit(0); 
+      clean_exit(-7); 
       break;
   }
 
@@ -106,18 +118,26 @@ int main(int argc, char *argv[])
   printf("Content-type: application/json; charset=utf-8\n\n");
   mqtt_pub(thingID,&queryNodeHead);
   free_query_node(&queryNodeHead);
+  clean_exit(0);
   return 0;
 }
 
 
 /*extract thing ID from requestURI*/
-static int get_thing_id(char* thingID)
+static int get_thing_id(char **thingID)
 {
 
   if (NULL!=REQUEST_URI){
     char *tempID=strtok((strrchr(REQUEST_URI,'/')+1),"?");
     if(NULL!=tempID){
-      strncpy(thingID,tempID,MAX_ID_LEN);
+      *thingID=(char*)calloc(1,sizeof(char)*(1+strlen(tempID)));
+      if(NULL!=*thingID){
+        gaf_thingID=*thingID;
+        strcpy(*thingID,tempID);
+      }
+      else{
+        return -3;
+      }
     }
     else{
       return -1;
@@ -258,10 +278,12 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
 {
   /*sample: {"hello":"world","foo":"bar"} */
   char *query,*command;
+  unsigned int allocQueryFlag=0;
 
   if(gQueryCount>0){
-    unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+100);
+    unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+10);
     query=(char*)malloc(queryLength);
+    allocQueryFlag=1;
     command=(char*)malloc(queryLength+(sizeof(char)*(strlen(thingID)+strlen(PUB_COMMAND_TEMPLATE)+10)));
     strcpy(query,"{\"");
     while(NULL!=queryNodeHead->next){
@@ -278,6 +300,7 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
   }
   else{
     query="{}";
+    allocQueryFlag=0;
     command=(char*)calloc(1,(sizeof(char)*(strlen(thingID)+strlen(PUB_COMMAND_TEMPLATE)+10)));
   }
 
@@ -285,7 +308,16 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
   sprintf(command, PUB_COMMAND_TEMPLATE,thingID,query);
   system(command);
   printf("{\"with\":{\"thing\":\"%s\",\"created\":\"2016-07-01T14:50:31.911Z\",\"content\":%s,\"transaction\":\"b80f15cf-e0e6-43e0-8caa-6575ece86187\"}}",thingID,query);
-  //free(query);
-  //free(command);
+  if (0!=allocQueryFlag) free(query);
+  free(command);
   return(0);
+}
+
+static int clean_exit(int retVal)
+{
+  if(0!=gaf_thingID){
+    free((void*)gaf_thingID);
+  }
+
+  exit(retVal);
 }
