@@ -8,6 +8,7 @@
  *TODO: support MQTT topic structures
  *TODO: add date and time to jsons
  *TODO: add transaction IDs to jsons
+ *TODO: add optional logging
  */
 
 #define PUB_COMMAND_TEMPLATE  "mosquitto_pub -t %s -m '%s' -q 1"
@@ -260,7 +261,6 @@ static int parse_query_string(queryNode* queryNodeHead)
 
     queryNodeHead=queryNodeHead->next;
   }
-  printf("\nquery=%x\n",query);
   free((void*)queryPtr);
   return 0;
 }
