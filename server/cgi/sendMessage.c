@@ -62,19 +62,19 @@ int main(int argc, char *argv[])
     case -1:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 400 Bad request\n\n");
-      printf("{\"error\":{\"code\":\"ERR_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}"); /*test case: request ending in / */
+      printf("{\"error\":{\"code\":\"ERR_ID_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}"); /*test case: request ending in / */
       clean_exit(-1); /*if there is no thing, then there is no thang*/ 
       break;
     case -2:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
-      printf("{\"error\":{\"code\":\"ERR_REQUEST_STRING_EMPTY\",\"reason\":\"request string is empty\"}}"); 
+      printf("{\"error\":{\"code\":\"ERR_ID_REQUEST_STRING_EMPTY\",\"reason\":\"request string is empty\"}}"); 
       clean_exit(-2); 
       break;
     case -3:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
-      printf("{\"error\":{\"code\":\"ERR_ALLOC_ID_FAILED\",\"reason\":\"ID alloc failed\"}}"); 
+      printf("{\"error\":{\"code\":\"ERR_ID_ALLOC_FAILED\",\"reason\":\"ID alloc failed\"}}"); 
       clean_exit(-3); 
       break;
     case 0:
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     default:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
-      printf("{\"error\":{\"code\":\"ERR_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
+      printf("{\"error\":{\"code\":\"ERR_ID_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
       clean_exit(-4); 
       break;
   }
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     case -1 :
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
-      printf("{\"error\":{\"code\":\"ERR_ALREADY_ALLOCATED\",\"reason\":\"node already allocated\"}}");
+      printf("{\"error\":{\"code\":\"ERR_NODE_ALREADY_ALLOCATED\",\"reason\":\"node already allocated\"}}");
       clean_exit(-5);  
       break;
     case -2 : 
@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     default:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
-      printf("{\"error\":{\"code\":\"ERR_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
+      printf("{\"error\":{\"code\":\"ERR_NODE_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
       clean_exit(-7); 
       break;
   }
