@@ -37,7 +37,7 @@ static int get_query_count(void);
 static int allocate_query_nodes(queryNode* queryNodeHead);
 static void free_query_node(queryNode* queryNodeHead);
 static int parse_query_string(queryNode* queryNodeHead); 
-static void traverse_query_string(queryNode* queryNodeHead);
+//static void traverse_query_string(queryNode* queryNodeHead);
 static int mqtt_pub(char* thingID,queryNode* queryNodeHead);
 static int clean_exit(int);
 
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     case -3:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
-      printf("{\"error\":{\"code\":\"ERR_ALLOC_ID_FAILED\",\"reason\":\"ID allock failed\"}}"); 
+      printf("{\"error\":{\"code\":\"ERR_ALLOC_ID_FAILED\",\"reason\":\"ID alloc failed\"}}"); 
       clean_exit(-3); 
       break;
     case 0:
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
   }
 
   queryNode queryNodeHead;
-  queryNodeHead.next=NULL;
+  memset(&queryNodeHead,0,sizeof(queryNode));
   retVal=allocate_query_nodes(&queryNodeHead);
 
   switch(retVal){
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
   }
 
   parse_query_string(&queryNodeHead);
-  traverse_query_string(&queryNodeHead);
+  //traverse_query_string(&queryNodeHead);
 
   printf("Content-type: application/json; charset=utf-8\n\n");
   mqtt_pub(thingID,&queryNodeHead);
@@ -235,11 +235,12 @@ static void free_query_node(queryNode* queryNodeHead)
 /*parse the query string and store it in the queryNode LL*/
 static int parse_query_string(queryNode* queryNodeHead)
 {
-  char *query;
+  char *queryPtr=NULL,*query=NULL;
   char *key, *value;
 
   if(0!=gQueryCount){
-    query=(char*)calloc(1,sizeof(char)*(strlen(QUERY_STRING)+1));
+    queryPtr=(char*)calloc(1,sizeof(char)*(strlen(QUERY_STRING)+1));
+    query=queryPtr;
     strcpy(query,QUERY_STRING);
   }
   else{
@@ -250,7 +251,6 @@ static int parse_query_string(queryNode* queryNodeHead)
     key=strtok(query,"=");
     queryNodeHead->key=(char*)malloc(sizeof(char) * (strlen(key)+1));
     strcpy(queryNodeHead->key,key);
-
     query+=strlen(key)+sizeof(char);
 
     value=strtok(query,"&");
@@ -260,9 +260,12 @@ static int parse_query_string(queryNode* queryNodeHead)
 
     queryNodeHead=queryNodeHead->next;
   }
+  printf("\nquery=%x\n",query);
+  free((void*)queryPtr);
   return 0;
 }
 
+#if 0
 /*a local test function to traverse the LL and print its contents*/
 static void traverse_query_string(queryNode* queryNodeHead)
 {
@@ -271,7 +274,7 @@ static void traverse_query_string(queryNode* queryNodeHead)
     queryNodeHead=queryNodeHead->next;
   } 
 }
-
+#endif
 
 /*publish the reconstructed queryString to topic-thingID*/
 static int mqtt_pub(char* thingID,queryNode* queryNodeHead)
