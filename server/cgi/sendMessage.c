@@ -7,7 +7,7 @@
 /*
  *TODO: add size limit checks to enhance security
  *TODO: support MQTT topic structures
- *TODO: add transaction IDs to jsons
+ *TODO: add better transaction IDs to jsons
  *TODO: add optional logging
  *TODO: handle all alloc return cases
  */
