@@ -158,6 +158,12 @@ static int get_query_count(void)
     int queryCount_eql=0;
     int queryCount_amb=0;
     unsigned int queryLength=strlen(QUERY_STRING);
+
+    if(('&'==QUERY_STRING[queryLength-1])||\
+       ('='==QUERY_STRING[queryLength-1])){ /*possible malformed query*/
+      return 0;
+    }
+
     for(int i=0;i<=queryLength;i++){
       if ('='==QUERY_STRING[i]) queryCount_eql++;
     }
