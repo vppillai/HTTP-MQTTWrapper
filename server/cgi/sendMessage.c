@@ -12,6 +12,9 @@
  *TODO: make session ID forming a seperate func and use in all jsons
  *TODO: add optional logging
  *TODO: handle all alloc return cases
+ *TODO: support URL encoding of numbers and special charas
+ *TODO: replace system() with code integration for speedup
+ *
  */
 
 #define STD_PUB_COMMAND_TEMPLATE  "mosquitto_pub -t %s -m '%s' -q 1"
@@ -86,8 +89,10 @@ int main(int argc, char *argv[])
 static int get_thingID(char **thingID)
 {
 
+  char *scriptName=basename(getenv("SCRIPT_NAME"));
   if (NULL!=REQUEST_URI){
-    char *tempID=strtok((strrchr(REQUEST_URI,'/')+1),"?");
+    char *tempID=strstr(REQUEST_URI,scriptName)+strlen(scriptName)+1;
+    tempID=strtok(tempID,"?");
     if(NULL!=tempID){
       *thingID=(char*)calloc(1,sizeof(char)*(1+strlen(tempID)));
       if(NULL!=*thingID){
@@ -108,6 +113,7 @@ static int get_thingID(char **thingID)
   }
 }
 
+/*process the outcome of parsing thingID*/
 static void process_get_thingID_retval(int retval)
 {
 
@@ -201,7 +207,7 @@ static int alloc_query_nodes(queryNode* queryNodeHead)
   }
 }
 
-
+/*process the outcome of query nodes allocation*/
 static void process_alloc_query_nodes_retval(int retval)
 {
   switch(retval){
