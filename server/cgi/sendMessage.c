@@ -88,13 +88,13 @@ int main(int argc, char *argv[])
 /*extract thing ID from requestURI*/
 static int get_thingID(char **thingID)
 {
-
   char *scriptName=basename(getenv("SCRIPT_NAME")); /*allow better deployment options*/
-  if (NULL!=REQUEST_URI){
-    char *tempID=strstr(REQUEST_URI,scriptName)+strlen(scriptName);
+  
+    char *tempID=strstr(REQUEST_URI,scriptName);
+    tempID+=strlen(scriptName);
     if('\0'!=*tempID) /*test case - dont add a topic*/
     {
-      tempID=strtok(tempID+1,"?"); /*+1 for the possible'/'*/
+      tempID=strtok(tempID+1,"?"); 
     }
     else{
       return -1;    
@@ -113,10 +113,6 @@ static int get_thingID(char **thingID)
       return -1;
     }
     return 0;
-  }
-  else{
-    return -2;
-  }
 }
 
 /*process the outcome of parsing thingID*/
@@ -370,7 +366,7 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead,message_t messageType
   snprintf(transactionString,(sizeof(char)*63),"%s:%s-%llx",getenv("REMOTE_ADDR"),getenv("REMOTE_PORT"),epochMilSec);
     
   system(command);
-  
+
   printf("{\"with\":{\"topic\":\"%s\",\"created\":\"%s\",\"content\":%s,\"session\":\"%s\"}}",thingID,timeStr,query,transactionString);
   
   if (0!=allocQueryFlag) free(query);
