@@ -89,10 +89,16 @@ int main(int argc, char *argv[])
 static int get_thingID(char **thingID)
 {
 
-  char *scriptName=basename(getenv("SCRIPT_NAME"));
+  char *scriptName=basename(getenv("SCRIPT_NAME")); /*allow better deployment options*/
   if (NULL!=REQUEST_URI){
-    char *tempID=strstr(REQUEST_URI,scriptName)+strlen(scriptName)+1;
-    tempID=strtok(tempID,"?");
+    char *tempID=strstr(REQUEST_URI,scriptName)+strlen(scriptName);
+    if('\0'!=*tempID) /*test case - dont add a topic*/
+    {
+      tempID=strtok(tempID+1,"?"); /*+1 for the possible'/'*/
+    }
+    else{
+      return -1;    
+    }
     if(NULL!=tempID){
       *thingID=(char*)calloc(1,sizeof(char)*(1+strlen(tempID)));
       if(NULL!=*thingID){
@@ -365,7 +371,7 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead,message_t messageType
     
   system(command);
   
-  printf("{\"with\":{\"thing\":\"%s\",\"created\":\"%s\",\"content\":%s,\"session\":\"%s\"}}",thingID,timeStr,query,transactionString);
+  printf("{\"with\":{\"topic\":\"%s\",\"created\":\"%s\",\"content\":%s,\"session\":\"%s\"}}",thingID,timeStr,query,transactionString);
   
   if (0!=allocQueryFlag) free(query);
   free(command);
