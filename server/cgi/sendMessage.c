@@ -7,7 +7,6 @@
 
 /*
  *TODO: add size limit checks to enhance security
- *TODO: support MQTT topic structures
  *TODO: add more info to  session IDs.
  *TODO: make session ID forming a seperate func and use in all jsons
  *TODO: add optional logging
@@ -77,7 +76,6 @@ int main(int argc, char *argv[])
   parse_query_string(&queryNodeHead);
   //traverse_query_string(&queryNodeHead);
 
-  printf("Content-type: application/json; charset=utf-8\n\n");
 
   mqtt_pub(thingID,&queryNodeHead,MESSAGE_TYPE_STD);
   clean_exit(0);
@@ -371,9 +369,20 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead,message_t messageType
   char transactionString[64];
   snprintf(transactionString,(sizeof(char)*63),"%s:%s-%llx",getenv("REMOTE_ADDR"),getenv("REMOTE_PORT"),epochMilSec);
     
-  system(command);
+  int retval=system(command);
+  retval=WEXITSTATUS(retval);
 
-  printf("{\"with\":{\"topic\":\"%s\",\"created\":\"%s\",\"content\":%s,\"session\":\"%s\"}}",thingID,timeStr,query,transactionString);
+  switch(retval){
+    case (0):
+      printf("Content-type: application/json; charset=utf-8\n\n");
+      printf("{\"with\":{\"topic\":\"%s\",\"created\":\"%s\",\"content\":%s,\"session\":\"%s\"}}",thingID,timeStr,query,transactionString);
+    break;
+    default:
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 400 Bad request\n\n");
+      printf("{\"error\":{\"code\":\"ERR_PUB_FAILED\",\"reason\":\"pubError(%d)\"}}",retval); /*test case: request ending in / */
+    break;
+  }
   
   if (0!=allocQueryFlag) free(query);
   free(command);
