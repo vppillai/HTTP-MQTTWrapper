@@ -16,7 +16,7 @@
  *
  */
 
-#define STD_PUB_COMMAND_TEMPLATE  "mosquitto_pub -t %s -m '%s' -q 1"
+#define STD_PUB_COMMAND_TEMPLATE  "mosquitto_pub -t %s -m '%s' -q 1 -r"
 
 static unsigned char debug=0;
 
