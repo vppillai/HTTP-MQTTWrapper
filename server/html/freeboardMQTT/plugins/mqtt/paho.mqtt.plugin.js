@@ -69,7 +69,7 @@
             	"display_name": "JSON messages?",
             	"type"        : "boolean",
             	"description" : "If the messages on your topic are in JSON format they will be parsed so the individual fields can be used in freeboard widgets",
-            	"default_value": false
+            	"default_value":true 
             }
 		],
 		// **newInstance(settings, newInstanceCallback, updateCallback)** (required) : A function that will be called when a new instance of this plugin is requested.
