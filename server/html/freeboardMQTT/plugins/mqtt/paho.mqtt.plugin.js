@@ -10,7 +10,7 @@
 		"display_name": "Paho MQTT",
         "description" : "Receive data from an MQTT server.",
 		"external_scripts" : [
-        "plugins/mqtt/mqttws31.min.js",
+        "plugins/mqtt/mqttws31.js",
 		],
 		"settings"    : [
 			{
