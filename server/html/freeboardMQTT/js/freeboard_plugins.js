@@ -3333,7 +3333,7 @@ $.extend(freeboard, jQuery.eventEmitter);
 		}
 
 		this.onSettingsChanged = function (newSettings) {
-			dweetio.stop_listening_for(currentSettings.thing_id);
+			dweetio.stop_listening();
 
 			currentSettings = newSettings;
 
@@ -4459,19 +4459,25 @@ freeboard.loadDatasourcePlugin({
             updateState();
         }
 
-        this.onCalculatedValueChanged = function (settingName, newValue) {
-            if (settingName == "value") {
-                isOn = Boolean(newValue);
-            }
-            if (settingName == "on_text") {
-                onText = newValue;
-            }
-            if (settingName == "off_text") {
-                offText = newValue;
-            }
+this.onCalculatedValueChanged = function (settingName, newValue) {
+	if (settingName == "value") {
+		if (newValue == onText) {
+			isOn = true;
 
-            updateState();
-        }
+		}
+		else {
+			isOn = false;
+		}
+	}
+	if (settingName == "on_text") {
+		onText = newValue;
+	}
+	if (settingName == "off_text") {
+		offText = newValue;
+	}
+
+	        updateState();
+		    }
 
         this.onDispose = function () {
         }

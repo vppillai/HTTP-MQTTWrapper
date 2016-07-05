@@ -777,19 +777,26 @@
             updateState();
         }
 
-        this.onCalculatedValueChanged = function (settingName, newValue) {
-            if (settingName == "value") {
-                isOn = Boolean(newValue);
-            }
-            if (settingName == "on_text") {
-                onText = newValue;
-            }
-            if (settingName == "off_text") {
-                offText = newValue;
-            }
+this.onCalculatedValueChanged = function (settingName, newValue) {
+	if (settingName == "value") {
+		if (newValue == onText) {
+			isOn = true;
 
-            updateState();
-        }
+		}
+		else {
+			isOn = false;
+		}
+	}
+	if (settingName == "on_text") {
+		onText = newValue;
+	}
+	if (settingName == "off_text") {
+		offText = newValue;
+	}
+
+	        updateState();
+		    }
+
 
         this.onDispose = function () {
         }

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>freeboard</title>
+    <title>IoT demo dashboard</title>
 	<meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
@@ -12,11 +12,11 @@
     <script type="text/javascript">
         head.js("js/freeboard_plugins.min.js",
                 // *** Load more plugins here ***
-             "plugins/mqtt/paho.mqtt.plugin.js",
+               "plugins/mqtt/paho.mqtt.plugin.js",
                 function(){
                     $(function()
                     { //DOM Ready
-                        freeboard.initialize(true);
+                        freeboard.initialize(false);
 
                         var hashpattern = window.location.hash.match(/(&|#)source=([^&]+)/);
                         if (hashpattern !== null) {
@@ -26,12 +26,23 @@
                                 });
                             });
                         }
+			else{
+			$.getJSON("dashboard.json", function(data) {
+				freeboard.loadDashboard(data, function() {
+					freeboard.setEditing(false);
+					});
+				});
+
+			}
 
                     });
                 });
     </script>
 </head>
 <body>
+<div id="companyHeader">
+<h1 style="position:relative;top:18px;left:25%;">IoT Cloud Dashboard Demo</h1>
+</div>
 <div id="board-content">
     <img id="dash-logo" data-bind="attr:{src: header_image}, visible:header_image()">
     <div class="gridster responsive-column-width">
@@ -143,6 +154,16 @@
         </section>
     </li>
 </script>
+<center><p  style="font-size:10px">developed using `Freeboard` by Vysakh P Pillai</p></center>
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
 
+ga('create', 'UA-75631534-1', 'auto');
+ga('send', 'pageview');
+
+</script>
 </body>
 </html>
