@@ -1,5 +1,7 @@
 // # A Freeboard Plugin that uses the Eclipse Paho javascript client to read MQTT messages
 
+var pahoClient;
+
 (function()
 {
 	// ### Datasource Definition
@@ -91,7 +93,7 @@
 
 		function onConnect() {
 			console.log("Connected to server");
-			client.subscribe(currentSettings.topic);
+			pahoClient.subscribe(currentSettings.topic);
 		};
 		
 		function onConnectionLost(responseObject) {
@@ -112,10 +114,10 @@
 		// **onSettingsChanged(newSettings)** (required) : A public function we must implement that will be called when a user makes a change to the settings.
 		self.onSettingsChanged = function(newSettings)
 		{
-			client.disconnect();
+			pahoClient.disconnect();
 			data = {};
 			currentSettings = newSettings;
-			client.connect({onSuccess:onConnect,
+			pahoClient.connect({onSuccess:onConnect,
 							userName: currentSettings.username,
 							password: currentSettings.password,
 							useSSL: currentSettings.use_ssl});
@@ -130,18 +132,18 @@
 		// **onDispose()** (required) : A public function we must implement that will be called when this instance of this plugin is no longer needed. Do anything you need to cleanup after yourself here.
 		self.onDispose = function()
 		{
-			if (client.isConnected()) {
-				client.disconnect();
+			if (pahoClient.isConnected()) {
+				pahoClient.disconnect();
 			}
-			client = {};
+			pahoClient = {};
 		}
 
-		var client = new Paho.MQTT.Client(currentSettings.server,
+		pahoClient = new Paho.MQTT.Client(currentSettings.server,
 										currentSettings.port, 
 										currentSettings.client_id);
-		client.onConnectionLost = onConnectionLost;
-		client.onMessageArrived = onMessageArrived;
-		client.connect({onSuccess:onConnect, 
+		pahoClient.onConnectionLost = onConnectionLost;
+		pahoClient.onMessageArrived = onMessageArrived;
+		pahoClient.connect({onSuccess:onConnect, 
 						
 						userName: currentSettings.username,
 						password: currentSettings.password,
