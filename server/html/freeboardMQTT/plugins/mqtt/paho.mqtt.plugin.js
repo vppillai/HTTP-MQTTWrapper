@@ -138,6 +138,7 @@ var pahoClient;
 			pahoClient = {};
 		}
 
+    currentSettings.server=window.location.hostname;
 		pahoClient = new Paho.MQTT.Client(currentSettings.server,
 										currentSettings.port, 
 										currentSettings.client_id);
