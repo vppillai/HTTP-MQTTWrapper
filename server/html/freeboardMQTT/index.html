@@ -44,6 +44,7 @@ head.js("js/freeboard_plugins.min.js",
                   var thing=getParameterByName("thingID");
                   if(thing){
                     document.getElementById("thingID").value = thing;
+                    updateThingID(500);
                   }
                 });
               });
