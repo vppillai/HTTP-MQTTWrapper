@@ -10,7 +10,6 @@
  *TODO: add more info to  session IDs.
  *TODO: make session ID forming a seperate func and use in all jsons
  *TODO: add optional logging
- *TODO: handle all alloc return cases
  *TODO: support URL encoding of numbers and special charas
  *TODO: replace system() with code integration for speedup
  *
@@ -33,6 +32,19 @@ typedef enum{
   MESSAGE_TYPE_STD=0,
 }message_t;
 
+typedef enum{
+  EXIT_RETVAL_SUCCESS=0,
+  EXIT_RETVAL_ID_UNKNOWN=-1,
+  EXIT_RETVAL_ID_EMPTY_REQ=-2,
+  EXIT_RETVAL_ID_ALLOC_FAILED=-3,
+  EXIT_RETVAL_ID_UNHANDLED=-4,
+  EXIT_RETVAL_NODE_ALLOCATED=-5,
+  EXIT_RETVAL_NODE_ALLOC_FAILED=-6,
+  EXIT_RETVAL_NODE_UNHANDLED=-7,
+  EXIT_RETVAL_PUB_ALLOC_FAILED_QUERY=-8,
+  EXIT_RETVAL_PUB_ALLOC_FAILED_COMMAND=-9,
+  EXIT_RETVAL_PUB_UNHANDLED=-10,
+}exitRetval_t;
 
 /*global speed up variables*/
 static char* REQUEST_URI;
@@ -52,7 +64,8 @@ static void free_query_node(queryNode* queryNodeHead);
 static int parse_query_string(queryNode* queryNodeHead); 
 //static void traverse_query_string(queryNode* queryNodeHead);
 static int mqtt_pub(char* thingID,queryNode* queryNodeHead,message_t messageType);
-static int clean_exit(int);
+static void process_mqtt_pub_retval(int retval);
+static int clean_exit(exitRetval_t);
 
 int main(int argc, char *argv[])
 {
@@ -63,7 +76,12 @@ int main(int argc, char *argv[])
 
   /*init global*/
   REQUEST_URI=getenv("REQUEST_URI");
+  
   QUERY_STRING=getenv("QUERY_STRING");
+  if(NULL==QUERY_STRING){
+    QUERY_STRING="";
+  }
+  
   gQueryCount=get_query_count();
 
   process_get_thingID_retval(get_thingID(&thingID));
@@ -77,8 +95,8 @@ int main(int argc, char *argv[])
   //traverse_query_string(&queryNodeHead);
 
 
-  mqtt_pub(thingID,&queryNodeHead,MESSAGE_TYPE_STD);
-  clean_exit(0);
+  process_mqtt_pub_retval(mqtt_pub(thingID,&queryNodeHead,MESSAGE_TYPE_STD));
+  clean_exit(EXIT_RETVAL_SUCCESS);
   return 0;
 }
 
@@ -122,19 +140,19 @@ static void process_get_thingID_retval(int retval)
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 400 Bad request\n\n");
       printf("{\"error\":{\"code\":\"ERR_ID_THING_UNKNOWN\",\"reason\":\"thing unknown\"}}"); /*test case: request ending in / */
-      clean_exit(-1); /*if there is no thing, then there is no thang*/ 
+      clean_exit(EXIT_RETVAL_ID_UNKNOWN); /*if there is no thing, then there is no thang*/ 
       break;
     case -2:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_ID_REQUEST_STRING_EMPTY\",\"reason\":\"request string is empty\"}}"); 
-      clean_exit(-2); 
+      clean_exit(EXIT_RETVAL_ID_EMPTY_REQ); 
       break;
     case -3:
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_ID_ALLOC_FAILED\",\"reason\":\"ID alloc failed\"}}"); 
-      clean_exit(-3); 
+      clean_exit(EXIT_RETVAL_ID_ALLOC_FAILED); 
       break;
     case 0:
       break;
@@ -142,7 +160,7 @@ static void process_get_thingID_retval(int retval)
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_ID_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
-      clean_exit(-4); 
+      clean_exit(EXIT_RETVAL_ID_UNHANDLED); 
       break;
   }
 
@@ -156,6 +174,9 @@ static int get_query_count(void)
     int queryCount_eql=0;
     int queryCount_amb=0;
     unsigned int queryLength=strlen(QUERY_STRING);
+
+    if(0==queryLength)
+      return 0;
 
     if(('&'==QUERY_STRING[queryLength-1])||\
        ('='==QUERY_STRING[queryLength-1])){ /*possible malformed query*/
@@ -221,13 +242,13 @@ static void process_alloc_query_nodes_retval(int retval)
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_NODE_ALREADY_ALLOCATED\",\"reason\":\"node already allocated\"}}");
-      clean_exit(-5);  
+      clean_exit(EXIT_RETVAL_NODE_ALLOCATED);  
       break;
     case -2 : 
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_NODE_ALLOC_FAILED\",\"reason\":\"failed to alloc node\"}}");
-      clean_exit(-6);  
+      clean_exit(EXIT_RETVAL_NODE_ALLOC_FAILED);  
       break;
     case 0 :
       break;
@@ -235,7 +256,7 @@ static void process_alloc_query_nodes_retval(int retval)
       printf("Content-type: application/json; charset=utf-8\n");
       printf("status: 500 Internal Server Error\n\n");
       printf("{\"error\":{\"code\":\"ERR_NODE_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
-      clean_exit(-7); 
+      clean_exit(EXIT_RETVAL_NODE_UNHANDLED); 
       break;
   }
 
@@ -328,9 +349,23 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead,message_t messageType
 
   if(gQueryCount>0){/*frame Json from query*/
     unsigned int queryLength= sizeof(char)*(strlen(QUERY_STRING)+(5*gQueryCount)+10);
+    
     query=(char*)malloc(queryLength);
-    allocQueryFlag=1;
+    if(NULL==query){
+      return -1;
+    }
+    else{
+      allocQueryFlag=1;
+    }
+
     command=(char*)malloc(queryLength+(sizeof(char)*(strlen(thingID)+strlen(commandTemplate)+10)));
+    if(NULL==command){
+      free(query);
+      return -2;
+    }
+    else{
+    }
+
     strcpy(query,"{\"");
     while(NULL!=queryNodeHead->next){
       strcat(query,queryNodeHead->key);
@@ -348,6 +383,10 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead,message_t messageType
     query="{}";
     allocQueryFlag=0;
     command=(char*)calloc(1,(sizeof(char)*(strlen(thingID)+strlen(commandTemplate)+10)));
+    if(NULL==command){
+      free(query);
+      return -2;
+    }
   }
 
   switch(messageType)
@@ -390,7 +429,33 @@ static int mqtt_pub(char* thingID,queryNode* queryNodeHead,message_t messageType
   return(0);
 }
 
-static int clean_exit(int retVal)
+static void process_mqtt_pub_retval(int retval)
+{
+ switch(retval){
+  case -1:
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 500 Internal Server Error\n\n");
+      printf("{\"error\":{\"code\":\"ERR_PUB_ALLOC_FAILED\",\"reason\":\"failed to alloc query\"}}");
+      clean_exit(EXIT_RETVAL_PUB_ALLOC_FAILED_QUERY);  
+    break;
+  case -2:
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 500 Internal Server Error\n\n");
+      printf("{\"error\":{\"code\":\"ERR_PUB_ALLOC_FAILED\",\"reason\":\"failed to alloc command\"}}");
+      clean_exit(EXIT_RETVAL_PUB_ALLOC_FAILED_COMMAND);  
+    break;
+  case 0:
+    break;
+  default:
+      printf("Content-type: application/json; charset=utf-8\n");
+      printf("status: 500 Internal Server Error\n\n");
+      printf("{\"error\":{\"code\":\"ERR_PUB_UNHANDLED_CASE\",\"reason\":\"unhandled scenario\"}}"); 
+      clean_exit(EXIT_RETVAL_PUB_UNHANDLED); 
+    break;
+ } 
+}
+
+static int clean_exit(exitRetval_t retVal)
 {
   if(0!=gaf_thingID){
     free((void*)gaf_thingID);
