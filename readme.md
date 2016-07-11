@@ -29,7 +29,7 @@ Require all granted
 ### mosquitto server and client 
 
 - in ubuntu , install `mosquitto-clients` and `mosquitto`
-- enable ws and otehr config in `/etc/mosquitto/mosquitto.conf` 
+- enable ws and other config in `/etc/mosquitto/mosquitto.conf` 
 
 ```bash
 pid_file /var/run/mosquitto.pid
