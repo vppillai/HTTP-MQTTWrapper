@@ -25,6 +25,11 @@ Require all granted
 </Directory>
 </IfDefine>
 ```
+- increase keepalive timeout and max request in /etc/apache2/apache2.conf
+
+`MaxKeepAliveRequests 1000`
+
+`MaxKeepAliveTimeout 60`
 
 ### mosquitto server and client 
 
