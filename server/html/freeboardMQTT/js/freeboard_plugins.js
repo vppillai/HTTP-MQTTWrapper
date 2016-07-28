@@ -4426,7 +4426,11 @@ freeboard.loadDatasourcePlugin({
     });
 
 	freeboard.addStyle('.indicator-light', "border-radius:50%;width:22px;height:22px;border:2px solid #3d3d3d;margin-top:5px;float:left;background-color:#222;margin-right:10px;");
-	freeboard.addStyle('.indicator-light.on', "background-color:#FFC773;box-shadow: 0px 0px 15px #FF9900;border-color:#FDF1DF;");
+
+	freeboard.addStyle('.indicator-light.default', "background-color:#FFC773;box-shadow: 0px 0px 15px #FF9900;border-color:#FDF1DF;");
+	freeboard.addStyle('.indicator-light.green', "background-color:#31F015;box-shadow: 0px 0px 15px #89F944;border-color:#47C620;");
+	freeboard.addStyle('.indicator-light.red', "background-color:#FF1818;box-shadow: 0px 0px 15px #FF4040;border-color:#F00;");
+
 	freeboard.addStyle('.indicator-text', "margin-top:10px;");
     var indicatorWidget = function (settings) {
         var self = this;
@@ -4439,7 +4443,7 @@ freeboard.loadDatasourcePlugin({
         var offText;
 
         function updateState() {
-            indicatorElement.toggleClass("on", isOn);
+            indicatorElement.toggleClass(currentSettings.color, isOn);
 
             if (isOn) {
                 stateElement.text((_.isUndefined(onText) ? (_.isUndefined(currentSettings.on_text) ? "" : currentSettings.on_text) : onText));
@@ -4512,7 +4516,27 @@ this.onCalculatedValueChanged = function (settingName, newValue) {
 	            name: "off_text",
 	            display_name: "Off Text",
 	            type: "calculated"
-	        }
+	        },
+          {
+            name: "color",
+            display_name: "Color",
+            type: "option",
+            options: [
+              {
+                name: "Default",
+                value: "default"
+              },
+              {
+                name: "Green",
+                value: "green"
+              },
+              {
+                name: "Red",
+                value: "red"
+              }
+            ]
+          }
+          
         ],
         newInstance: function (settings, newInstanceCallback) {
             newInstanceCallback(new indicatorWidget(settings));

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "allow_edit": false,
+  "allow_edit": true,
   "plugins": [],
   "panes": [
     {
@@ -62,7 +62,8 @@
             "title": "LED1 Status",
             "value": "datasources[\"devStat\"][\"msg\"][\"led1Stat\"]",
             "on_text": "ON",
-            "off_text": "OFF"
+            "off_text": "OFF",
+            "color": "default"
           }
         },
         {
@@ -71,7 +72,8 @@
             "title": "LED2 Status",
             "value": "datasources[\"devStat\"][\"msg\"][\"led2Stat\"]",
             "on_text": "ON",
-            "off_text": "OFF"
+            "off_text": "OFF",
+            "color": "green"
           }
         }
       ]
