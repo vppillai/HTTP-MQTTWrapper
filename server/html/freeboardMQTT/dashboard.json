@@ -79,6 +79,32 @@
       ]
     },
     {
+      "title": "Temperature",
+      "width": 1,
+      "row": {
+        "3": 9,
+        "4": 9
+      },
+      "col": {
+        "3": 1,
+        "4": 1
+      },
+      "col_width": 1,
+      "widgets": [
+        {
+          "type": "text_widget",
+          "settings": {
+            "title": "Temperature",
+            "size": "big",
+            "value": "datasources[\"devStat\"][\"msg\"][\"temp\"]",
+            "sparkline": true,
+            "animate": true,
+            "units": "C"
+          }
+        }
+      ]
+    },
+    {
       "title": "device configuration",
       "width": 1,
       "row": {
@@ -112,32 +138,6 @@
       ]
     },
     {
-      "title": "Temperature",
-      "width": 1,
-      "row": {
-        "3": 9,
-        "4": 9
-      },
-      "col": {
-        "3": 1,
-        "4": 1
-      },
-      "col_width": 1,
-      "widgets": [
-        {
-          "type": "text_widget",
-          "settings": {
-            "title": "Temperature",
-            "size": "big",
-            "value": "datasources[\"devStat\"][\"msg\"][\"temp\"]",
-            "sparkline": true,
-            "animate": true,
-            "units": "C"
-          }
-        }
-      ]
-    },
-    {
       "title": "USB device information",
       "width": 1,
       "row": {
@@ -156,6 +156,15 @@
             "title": "USB Device Name",
             "size": "regular",
             "value": "datasources[\"devStat\"][\"msg\"][\"usbName\"]",
+            "animate": true
+          }
+        },
+        {
+          "type": "text_widget",
+          "settings": {
+            "title": "USB Device Serial",
+            "size": "regular",
+            "value": "datasources[\"devStat\"][\"msg\"][\"usbSer\"]",
             "animate": true
           }
         }
