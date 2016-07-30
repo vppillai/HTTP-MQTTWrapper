@@ -25,6 +25,7 @@ Require all granted
 </Directory>
 </IfDefine>
 ```
+- enable cgi with 'sudo a2enmod cgi'
 - increase keepalive timeout and max request in /etc/apache2/apache2.conf
 
 `MaxKeepAliveRequests 1000`
