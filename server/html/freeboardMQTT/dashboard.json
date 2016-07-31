@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "allow_edit": true,
+  "allow_edit": false,
   "plugins": [],
   "panes": [
     {
@@ -63,7 +63,7 @@
             "value": "datasources[\"devStat\"][\"msg\"][\"led1Stat\"]",
             "on_text": "ON",
             "off_text": "OFF",
-            "color": "default"
+            "color": "orange"
           }
         },
         {
