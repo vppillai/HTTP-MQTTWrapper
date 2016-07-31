@@ -4427,9 +4427,11 @@ freeboard.loadDatasourcePlugin({
 
 	freeboard.addStyle('.indicator-light', "border-radius:50%;width:22px;height:22px;border:2px solid #3d3d3d;margin-top:5px;float:left;background-color:#222;margin-right:10px;");
 
-	freeboard.addStyle('.indicator-light.default', "background-color:#FFB340;box-shadow: 0px 0px 15px #FFC600;border-color:#C6AB0F;");
+  freeboard.addStyle('.indicator-light.default', "background-color:#FFC773;box-shadow: 0px 0px 15px #FF9900;border-color:#FDF1DF;");
+	freeboard.addStyle('.indicator-light.orange', "background-color:#FFB340;box-shadow: 0px 0px 15px #FFC600;border-color:#C6AB0F;");
 	freeboard.addStyle('.indicator-light.green', "background-color:#31F015;box-shadow: 0px 0px 15px #89F944;border-color:#47C620;");
 	freeboard.addStyle('.indicator-light.red', "background-color:#FF1818;box-shadow: 0px 0px 15px #FF4040;border-color:#F00;");
+	freeboard.addStyle('.indicator-light.lgreen', "background-color:#92B95B;box-shadow: 0px 0px 15px #869F62;border-color:#85A454;");
 
 	freeboard.addStyle('.indicator-text', "margin-top:10px;");
     var indicatorWidget = function (settings) {
@@ -4533,6 +4535,14 @@ this.onCalculatedValueChanged = function (settingName, newValue) {
               {
                 name: "Red",
                 value: "red"
+              },
+              {
+                name: "Green(lite)",
+                value: "lgreen"
+              },
+              {
+                name: "Orange",
+                value: "orange"
               }
             ]
           }
