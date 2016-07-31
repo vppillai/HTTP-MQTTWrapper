@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "allow_edit": false,
+  "allow_edit": true,
   "plugins": [],
   "panes": [
     {
@@ -74,6 +74,29 @@
             "on_text": "ON",
             "off_text": "OFF",
             "color": "green"
+          }
+        }
+      ]
+    },
+    {
+      "title": "Heartbeat",
+      "width": 1,
+      "row": {
+        "3": 1
+      },
+      "col": {
+        "3": 3
+      },
+      "col_width": 1,
+      "widgets": [
+        {
+          "type": "indicator",
+          "settings": {
+            "title": "",
+            "value": "datasources[\"devStat\"][\"msg\"][\"hb\"]",
+            "on_text": "1",
+            "off_text": "0",
+            "color": "lgreen"
           }
         }
       ]
@@ -176,7 +199,7 @@
       "name": "devStat",
       "type": "paho_mqtt",
       "settings": {
-        "server": "192.168.1.133",
+        "server": "mchp-masters.ddns.net",
         "port": 9001,
         "use_ssl": false,
         "client_id": "",
