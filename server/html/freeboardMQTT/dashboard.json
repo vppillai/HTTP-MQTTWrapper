@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "allow_edit": false,
+  "allow_edit": true,
   "plugins": [],
   "panes": [
     {
@@ -79,24 +79,23 @@
       ]
     },
     {
-      "title": "Heartbeat",
+      "title": "scan code",
       "width": 1,
       "row": {
+        "2": 1,
         "3": 1
       },
       "col": {
+        "2": 2,
         "3": 3
       },
       "col_width": 1,
       "widgets": [
         {
-          "type": "indicator",
+          "type": "html",
           "settings": {
-            "title": "",
-            "value": "datasources[\"devStat\"][\"msg\"][\"hb\"]",
-            "on_text": "1",
-            "off_text": "0",
-            "color": "lgreen"
+            "html": "<script type=\"text/javascript\" src=\"js/jquery.qrcode.js\"></script>\n<script type=\"text/javascript\" src=\"js/qrcode.js\"></script>\n<center>\n<br/>\n<br/>\n  <div id=\"qrcodeTable\" style=\"width:200px;height:200px;background-color:#FFFFFF;\"/>    </div>\n<br/>\n<br/>\n<p>Scan this code using a QR reader to launch this dashboard on another device </p>\n</center>\n<script>\n    jQuery('#qrcodeTable').qrcode({\n    width: 150,\n    height: 150,\n    marginTop:25,\n  text  : \"http://192.168.1.133/freeboard/?thingID=PIC32WK-00f3bf\"\n}); \n</script>\n",
+            "height": 7
           }
         }
       ]
@@ -105,10 +104,12 @@
       "title": "Temperature",
       "width": 1,
       "row": {
+        "2": 17,
         "3": 9,
         "4": 9
       },
       "col": {
+        "2": 2,
         "3": 1,
         "4": 1
       },
@@ -132,13 +133,13 @@
       "width": 1,
       "row": {
         "1": 25,
-        "2": 1,
+        "2": 19,
         "3": 11,
         "4": 11
       },
       "col": {
         "1": 1,
-        "2": 2,
+        "2": 1,
         "3": 2,
         "4": 2
       },
@@ -164,10 +165,12 @@
       "title": "USB device information",
       "width": 1,
       "row": {
+        "2": 23,
         "3": 15,
         "4": 15
       },
       "col": {
+        "2": 2,
         "3": 1,
         "4": 1
       },
@@ -192,6 +195,31 @@
           }
         }
       ]
+    },
+    {
+      "title": "Heartbeat",
+      "width": 1,
+      "row": {
+        "2": 27,
+        "3": 17
+      },
+      "col": {
+        "2": 1,
+        "3": 3
+      },
+      "col_width": 1,
+      "widgets": [
+        {
+          "type": "indicator",
+          "settings": {
+            "title": "",
+            "value": "datasources[\"devStat\"][\"msg\"][\"hb\"]",
+            "on_text": "1",
+            "off_text": "0",
+            "color": "lgreen"
+          }
+        }
+      ]
     }
   ],
   "datasources": [
@@ -199,7 +227,7 @@
       "name": "devStat",
       "type": "paho_mqtt",
       "settings": {
-        "server": "mchp-masters.ddns.net",
+        "server": "10.41.153.49",
         "port": 9001,
         "use_ssl": false,
         "client_id": "",
