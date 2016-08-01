@@ -94,7 +94,7 @@
         {
           "type": "html",
           "settings": {
-            "html": "<script type=\"text/javascript\" src=\"js/jquery.qrcode.js\"></script>\n<script type=\"text/javascript\" src=\"js/qrcode.js\"></script>\n<center>\n<br/>\n<br/>\n  <div id=\"qrcodeTable\" style=\"width:200px;height:200px;background-color:#FFFFFF;\"/>    </div>\n<br/>\n<br/>\n<p>Scan this code using a QR reader to launch this dashboard on another device </p>\n</center>\n<script>\n    jQuery('#qrcodeTable').qrcode({\n    width: 150,\n    height: 150,\n    marginTop:25,\n  text  : \"http://192.168.1.133/freeboard/?thingID=PIC32WK-00f3bf\"\n}); \n</script>\n",
+            "html": "<center>\n<br/>\n<br/>\n  <div id=\"qrcodeTable\" style=\"width:200px;height:200px;background-color:#FFFFFF;\"/>    </div>\n<br/>\n<br/>\n<p>Scan this code using a QR reader to launch this dashboard on another device </p>\n</center>\n<script>\n    var qrText;\n\t    if(typeof thingID === \"undefined\"){    \n            qrText=window.location.href.split(/[?#]/)[0];\n        }\n        else{\n            if(null==thingID){\n                qrText=window.location.href.split(/[?#]/)[0];\n            }\n            else{\n            \tqrText=window.location.href.split(/[?#]/)[0] + \"?thingID=\" +thingID;                \n            }\n        }\n    \n\t\n    jQuery('#qrcodeTable').qrcode({\n    width: 150,\n    height: 150,\n    marginTop:25,\n    text: qrText\n}); </script>\n",
             "height": 7
           }
         }
@@ -227,7 +227,7 @@
       "name": "devStat",
       "type": "paho_mqtt",
       "settings": {
-        "server": "10.41.153.49",
+        "server": "192.168.1.133",
         "port": 9001,
         "use_ssl": false,
         "client_id": "",
