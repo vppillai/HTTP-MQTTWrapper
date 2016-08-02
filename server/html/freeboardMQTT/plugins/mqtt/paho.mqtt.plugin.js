@@ -27,7 +27,7 @@ var pahoClient;
 				"name"        : "port",
 				"display_name": "Port",
 				"type"        : "number", 
-        "default_value": 9001,
+        "default_value": 443,
 				"description" : "The port to connect to the MQTT Server on",
 				"required"    : true
 			},
