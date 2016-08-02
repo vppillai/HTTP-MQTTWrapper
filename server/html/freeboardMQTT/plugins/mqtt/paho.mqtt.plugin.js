@@ -93,7 +93,10 @@ var pahoClient;
 
 		function onConnect() {
 			console.log("Connected to server");
-			pahoClient.subscribe(currentSettings.topic);
+      pahoClient.subscribe(currentSettings.topic);
+			if (typeof refreshPanels === "function") { 
+        refreshPanels();
+      }
 		};
 		
 		function onConnectionLost(responseObject) {
