@@ -36,6 +36,7 @@ Require all granted
 
 - in ubuntu , install `mosquitto-clients` and `mosquitto`
 - enable ws and other config in `/etc/mosquitto/mosquitto.conf` 
+  - as a workaround to firewall blocking the original ws port of 9001, I am configuring this to 443 (https port). But this is a horrible thing to do. you guys should be better than me and should have a proper fix and configuration for this. 
 
 ```bash
 pid_file /var/run/mosquitto.pid
@@ -57,7 +58,7 @@ log_timestamp true
 
 listener 1883 
 
-listener 9001 
+listener 443  
 protocol websockets
 
 ``` 
