@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="viewport" content = "width = device-width, initial-scale = 1, user-scalable = no" />
-    <link href="css/freeboard.min.css" rel="stylesheet" />
+    <link href="css/freeboard.css" rel="stylesheet" />
     <script src="js/freeboard.thirdparty.min.js"></script>
     <script type="text/javascript" src="js/jquery.qrcode.min.js"></script>
     <script type="text/javascript" src="js/qrcode.min.js"></script>
@@ -23,9 +23,9 @@ function getParameterByName(name, url) {
 }
     </script>
     <script type="text/javascript">
-head.js("js/freeboard_plugins.min.js",
+head.js("js/freeboard_plugins.js",
     // *** Load more plugins here ***
-    "plugins/mqtt/paho.mqtt.plugin.min.js",
+    "plugins/mqtt/paho.mqtt.plugin.js",
     function(){
       $(function()
           { //DOM Ready
@@ -62,7 +62,7 @@ head.js("js/freeboard_plugins.min.js",
   </head>
   <body>
     <div id="companyHeader">
-      <h1 style="position:relative;top:18px;left:25%;">IoT Cloud Dashboard Demo</h1>
+      <h1 class="company-header" >IoT Cloud Dashboard Demo</h1>
     </div>
     <div id="board-content">
       <img id="dash-logo" data-bind="attr:{src: header_image}, visible:header_image()">
@@ -175,7 +175,7 @@ head.js("js/freeboard_plugins.min.js",
         </section>
     </li>
     </script>
-    <center><p  style="font-size:10px">developed using `Freeboard` by Vysakh P Pillai</p></center>
+    <center><p  class="footer">developed using `Freeboard` by Vysakh P Pillai</p></center>
     <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
